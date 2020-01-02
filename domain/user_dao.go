@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"bookstore-user-api/util/date_utils"
 	"bookstore-user-api/util/errors"
 	"fmt"
 )
@@ -18,6 +19,7 @@ func (user *User) Get() *errors.RestErr {
 	user.DateCreated = result.DateCreated
 	user.FirstName = result.FirstName
 	user.LastName = result.LastName
+
 	return nil
 }
 
@@ -29,6 +31,7 @@ func (user *User) Save() *errors.RestErr {
 		}
 		return errors.NewBadRequestError(fmt.Sprintf("user %d exists", user.Id))
 	}
+	user.DateCreated = date_utils.GetNowString()
 	userDB[user.Id] = user
 	return nil
 }
