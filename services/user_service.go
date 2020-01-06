@@ -25,3 +25,10 @@ func GetUser(userId int64) (*domain.User, *errors.RestErr) {
 	}
 	return result, nil
 }
+
+func UpdateUser(user domain.User) (*domain.User, *errors.RestErr) {
+	if err := user.Update(); err != nil {
+		return nil, err
+	}
+	return &user, nil
+}

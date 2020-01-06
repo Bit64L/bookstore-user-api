@@ -3,6 +3,7 @@ package main
 import (
 	"bookstore-user-api/app"
 	"github.com/gin-gonic/gin"
+	"log"
 )
 
 var (
@@ -10,5 +11,6 @@ var (
 )
 
 func main(){
+	log.Println("start application!")
 	app.StartApplication()
 }
