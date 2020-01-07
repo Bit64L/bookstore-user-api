@@ -2,15 +2,18 @@ package domain
 
 import (
 	"bookstore-user-api/datasource/mysql/user_db"
+	"bookstore-user-api/util/constant"
 	"bookstore-user-api/util/date_utils"
 	"bookstore-user-api/util/errors"
 	"fmt"
 )
 
 const (
-	queryInsertUser = "INSERT INTO user(first_name, last_name, email, date_created) values(?,?,?,?);"
-	queryGetUser    = "select id, first_name, last_name, date_created, email from user where id = ?;"
-	queryUpdateUser = "update user set first_name = ?, last_name = ?, email = ? where id = ?;"
+	queryInsertUser       = "INSERT INTO user(first_name, last_name, email, date_created, password, status) values(?,?,?,?,?,?);"
+	queryGetUser          = "select id, first_name, last_name, date_created, email, password, status from user where id = ?;"
+	queryUpdateUser       = "update user set first_name = ?, last_name = ?, email = ?, password = ?, status = ? where id = ?;"
+	queryDeleteUser       = "delete from user where id = ?"
+	queryFindUserByStatus = "select id, first_name, last_name, date_created, email, password, status from user where status = ?"
 )
 
 var (
@@ -26,7 +29,7 @@ func (user *User) Get() *errors.RestErr {
 
 	result := stmt.QueryRow(user.Id)
 
-	if err := result.Scan(&user.Id, &user.FirstName, &user.LastName, &user.DateCreated, &user.Email); err != nil {
+	if err := result.Scan(&user.Id, &user.FirstName, &user.LastName, &user.DateCreated, &user.Email, &user.Password, &user.Status); err != nil {
 		return errors.NewInternalServerError(fmt.Sprintf("error when trying to get user: %d, %s", user.Id,
 			err.Error()))
 	}
@@ -43,8 +46,9 @@ func (user *User) Save() *errors.RestErr {
 	defer stmt.Close()
 
 	user.DateCreated = date_utils.GetNowString()
+	user.Status = constant.USER_ACTIVE
 
-	result, err := stmt.Exec(user.FirstName, user.LastName, user.Email, user.DateCreated)
+	result, err := stmt.Exec(user.FirstName, user.LastName, user.Email, user.DateCreated, user.Password, user.Status)
 	if err != nil {
 		return errors.NewInternalServerError(fmt.Sprintf("error when trying to save user: %s", err.Error()))
 	}
@@ -67,4 +71,43 @@ func (user *User) Update() *errors.RestErr {
 		return errors.NewInternalServerError(fmt.Sprintf("error when trying to update user: %s", err.Error()))
 	}
 	return nil
+}
+
+func (user *User) Delete() *errors.RestErr {
+	stmt, err := user_db.Client.Prepare(queryDeleteUser)
+	if err != nil {
+		return errors.NewInternalServerError(err.Error())
+	}
+
+	_, err = stmt.Exec(user.Id)
+	if err != nil {
+		return errors.NewInternalServerError(fmt.Sprintf("error when trying to update user: %s", err.Error()))
+	}
+	return nil
+}
+
+func (user *User) FindByStatus() (*[]User, *errors.RestErr) {
+	stmt, err := user_db.Client.Prepare(queryFindUserByStatus)
+	if err != nil {
+		return nil, errors.NewInternalServerError(err.Error())
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.Query(user.Status)
+	if err != nil {
+		return nil, errors.NewInternalServerError(fmt.Sprintf("error when trying to find user: %s", err.Error()))
+	}
+
+	users := make([]User, 0)
+
+	for rows.Next() {
+		var user User
+		if err := rows.Scan(&user.Id, &user.FirstName, &user.LastName, &user.DateCreated, &user.Email, &user.Password, &user.Status); err != nil {
+			return nil, errors.NewInternalServerError(err.Error())
+		}
+		users = append(users, user)
+	}
+
+	return &users, nil
+
 }

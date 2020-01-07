@@ -32,3 +32,21 @@ func UpdateUser(user domain.User) (*domain.User, *errors.RestErr) {
 	}
 	return &user, nil
 }
+
+func DeleteUser(userId int64) *errors.RestErr {
+	result := &domain.User{Id: userId}
+	if err := result.Delete(); err != nil {
+		return err
+	}
+	return nil
+
+}
+
+func FindUserByStatus(status string) (*[]domain.User, *errors.RestErr) {
+	result := &domain.User{Status: status}
+	users, err := result.FindByStatus()
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}

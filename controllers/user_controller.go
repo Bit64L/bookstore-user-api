@@ -67,3 +67,30 @@ func UpdateUser(c *gin.Context) {
 
 	c.JSON(http.StatusOK, result)
 }
+
+func DeleteUser(c *gin.Context) {
+	userId, err := strconv.ParseInt(c.Param("user_id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, errors.NewBadRequestError("user id should be a number"))
+		return
+	}
+
+	getErr := services.DeleteUser(userId)
+	if getErr != nil {
+		c.JSON(getErr.Status, getErr)
+		return
+	}
+
+	c.JSON(http.StatusOK, "successfully delete user!")
+
+}
+
+func Search(c *gin.Context) {
+	status := c.Query("status")
+	users, err := services.FindUserByStatus(status)
+	if err != nil {
+		c.JSON(err.Status, err)
+		return
+	}
+	c.JSON(http.StatusOK, users)
+}
