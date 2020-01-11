@@ -3,7 +3,7 @@ package controllers
 import (
 	"bookstore-user-api/domain"
 	"bookstore-user-api/services"
-	"bookstore-user-api/util/errors"
+	"bookstore-user-api/utils/errors"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -35,13 +35,26 @@ func GetUser(c *gin.Context) {
 		return
 	}
 
+	isPublic, err := strconv.ParseBool(c.GetHeader("X-Public"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, errors.NewBadRequestError(err.Error()))
+		return
+	}
+
 	result, getErr := services.GetUser(userId)
 	if getErr != nil {
 		c.JSON(getErr.Status, getErr)
 		return
 	}
 
-	c.JSON(http.StatusOK, result)
+	marshaledResult, marshalErr := result.Marshal(isPublic)
+	if marshalErr != nil {
+		c.JSON(marshalErr.Status, marshalErr)
+		return
+	}
+
+	c.JSON(http.StatusOK, marshaledResult)
+
 }
 
 func UpdateUser(c *gin.Context) {
@@ -87,10 +100,23 @@ func DeleteUser(c *gin.Context) {
 
 func Search(c *gin.Context) {
 	status := c.Query("status")
-	users, err := services.FindUserByStatus(status)
+
+	isPublic, err := strconv.ParseBool(c.GetHeader("X-Public"))
 	if err != nil {
-		c.JSON(err.Status, err)
+		c.JSON(http.StatusBadRequest, errors.NewBadRequestError(err.Error()))
 		return
 	}
-	c.JSON(http.StatusOK, users)
+
+	users, findErr := services.FindUserByStatus(status)
+	if findErr != nil {
+		c.JSON(findErr.Status, err)
+		return
+	}
+
+	marshaledUsers, marshalErr := users.Marshal(isPublic)
+	if marshalErr != nil {
+		c.JSON(marshalErr.Status, marshalErr)
+	}
+
+	c.JSON(http.StatusOK, marshaledUsers)
 }

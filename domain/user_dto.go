@@ -1,7 +1,7 @@
 package domain
 
 import (
-	"bookstore-user-api/util/errors"
+	"bookstore-user-api/utils/errors"
 	"strings"
 )
 

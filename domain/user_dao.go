@@ -2,9 +2,10 @@ package domain
 
 import (
 	"bookstore-user-api/datasource/mysql/user_db"
-	"bookstore-user-api/util/constant"
-	"bookstore-user-api/util/date_utils"
-	"bookstore-user-api/util/errors"
+	"bookstore-user-api/utils/constant"
+	"bookstore-user-api/utils/crypto_utils"
+	"bookstore-user-api/utils/date_utils"
+	"bookstore-user-api/utils/errors"
 	"fmt"
 )
 
@@ -14,10 +15,6 @@ const (
 	queryUpdateUser       = "update user set first_name = ?, last_name = ?, email = ?, password = ?, status = ? where id = ?;"
 	queryDeleteUser       = "delete from user where id = ?"
 	queryFindUserByStatus = "select id, first_name, last_name, date_created, email, password, status from user where status = ?"
-)
-
-var (
-	userDB map[int64]*User
 )
 
 func (user *User) Get() *errors.RestErr {
@@ -47,6 +44,7 @@ func (user *User) Save() *errors.RestErr {
 
 	user.DateCreated = date_utils.GetNowString()
 	user.Status = constant.USER_ACTIVE
+	user.Password = crypto_utils.GetSha256(user.Password)
 
 	result, err := stmt.Exec(user.FirstName, user.LastName, user.Email, user.DateCreated, user.Password, user.Status)
 	if err != nil {
@@ -86,7 +84,7 @@ func (user *User) Delete() *errors.RestErr {
 	return nil
 }
 
-func (user *User) FindByStatus() (*[]User, *errors.RestErr) {
+func (user *User) FindByStatus() ([]*User, *errors.RestErr) {
 	stmt, err := user_db.Client.Prepare(queryFindUserByStatus)
 	if err != nil {
 		return nil, errors.NewInternalServerError(err.Error())
@@ -98,16 +96,16 @@ func (user *User) FindByStatus() (*[]User, *errors.RestErr) {
 		return nil, errors.NewInternalServerError(fmt.Sprintf("error when trying to find user: %s", err.Error()))
 	}
 
-	users := make([]User, 0)
+	users := make([]*User, 0)
 
 	for rows.Next() {
 		var user User
 		if err := rows.Scan(&user.Id, &user.FirstName, &user.LastName, &user.DateCreated, &user.Email, &user.Password, &user.Status); err != nil {
 			return nil, errors.NewInternalServerError(err.Error())
 		}
-		users = append(users, user)
+		users = append(users, &user)
 	}
 
-	return &users, nil
+	return users, nil
 
 }

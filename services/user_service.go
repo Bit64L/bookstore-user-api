@@ -2,7 +2,7 @@ package services
 
 import (
 	"bookstore-user-api/domain"
-	"bookstore-user-api/util/errors"
+	"bookstore-user-api/utils/errors"
 )
 
 func CreateUser(user domain.User) (*domain.User, *errors.RestErr) {
@@ -42,7 +42,7 @@ func DeleteUser(userId int64) *errors.RestErr {
 
 }
 
-func FindUserByStatus(status string) (*[]domain.User, *errors.RestErr) {
+func FindUserByStatus(status string) (domain.Users, *errors.RestErr) {
 	result := &domain.User{Status: status}
 	users, err := result.FindByStatus()
 	if err != nil {
