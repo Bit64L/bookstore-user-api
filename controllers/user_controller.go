@@ -9,6 +9,11 @@ import (
 	"strconv"
 )
 
+func TestService(){
+
+}
+
+
 func CreateUser(c *gin.Context) {
 	var user domain.User
 
@@ -18,7 +23,7 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
-	result, saveErr := services.CreateUser(user)
+	result, saveErr := services.UserService.CreateUser(user)
 	if saveErr != nil {
 		c.JSON(saveErr.Status, saveErr)
 		return
@@ -41,7 +46,7 @@ func GetUser(c *gin.Context) {
 		return
 	}
 
-	result, getErr := services.GetUser(userId)
+	result, getErr := services.UserService.GetUser(userId)
 	if getErr != nil {
 		c.JSON(getErr.Status, getErr)
 		return
@@ -72,7 +77,7 @@ func UpdateUser(c *gin.Context) {
 		return
 	}
 
-	result, getErr := services.UpdateUser(user)
+	result, getErr := services.UserService.UpdateUser(user)
 	if getErr != nil {
 		c.JSON(getErr.Status, getErr)
 		return
@@ -88,7 +93,7 @@ func DeleteUser(c *gin.Context) {
 		return
 	}
 
-	getErr := services.DeleteUser(userId)
+	getErr := services.UserService.DeleteUser(userId)
 	if getErr != nil {
 		c.JSON(getErr.Status, getErr)
 		return
@@ -107,7 +112,7 @@ func Search(c *gin.Context) {
 		return
 	}
 
-	users, findErr := services.FindUserByStatus(status)
+	users, findErr := services.UserService.FindUserByStatus(status)
 	if findErr != nil {
 		c.JSON(findErr.Status, err)
 		return
