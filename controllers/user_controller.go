@@ -9,11 +9,6 @@ import (
 	"strconv"
 )
 
-func TestService(){
-
-}
-
-
 func CreateUser(c *gin.Context) {
 	var user domain.User
 
@@ -124,4 +119,24 @@ func Search(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, marshaledUsers)
+}
+
+func Login(c *gin.Context) {
+	request := domain.LoginRequest{}
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	user, err := services.UserService.LoginUser(request)
+	if err != nil {
+		c.JSON(err.Status, err)
+		return
+	}
+	userMarshal, err := user.Marshal(false)
+	if err != nil {
+		c.JSON(err.Status, err)
+		return
+	}
+	c.JSON(http.StatusOK, userMarshal)
 }

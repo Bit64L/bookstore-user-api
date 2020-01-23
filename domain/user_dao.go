@@ -10,11 +10,12 @@ import (
 )
 
 const (
-	queryInsertUser       = "INSERT INTO user(first_name, last_name, email, date_created, password, status) values(?,?,?,?,?,?);"
-	queryGetUser          = "select id, first_name, last_name, date_created, email, password, status from user where id = ?;"
-	queryUpdateUser       = "update user set first_name = ?, last_name = ?, email = ?, password = ?, status = ? where id = ?;"
-	queryDeleteUser       = "delete from user where id = ?"
-	queryFindUserByStatus = "select id, first_name, last_name, date_created, email, password, status from user where status = ?"
+	queryInsertUser                 = "INSERT INTO user(first_name, last_name, email, date_created, password, status) values(?,?,?,?,?,?);"
+	queryGetUser                    = "select id, first_name, last_name, date_created, email, password, status from user where id = ?;"
+	queryUpdateUser                 = "update user set first_name = ?, last_name = ?, email = ?, password = ?, status = ? where id = ?;"
+	queryDeleteUser                 = "delete from user where id = ?"
+	queryFindUserByStatus           = "select id, first_name, last_name, date_created, email, password, status from user where status = ?"
+	queryFindUserByEmailAndPassword = "select id, first_name, last_name, date_created, email, password, status from user where email = ? and password = ?"
 )
 
 func (user *User) Get() *errors.RestErr {
@@ -118,5 +119,23 @@ func (user *User) FindByStatus() ([]*User, *errors.RestErr) {
 	}
 
 	return users, nil
+
+}
+
+func (user *User) FindByEmailAndPassword() *errors.RestErr {
+	stmt, err := user_db.Client.Prepare(queryFindUserByEmailAndPassword)
+	if err != nil {
+		logger.Error("error when trying to prepare find user by email and password statement", err)
+		return errors.NewInternalServerError(errors.DatabaseError)
+	}
+	defer stmt.Close()
+
+	rows := stmt.QueryRow(user.Email, crypto_utils.GetSha256(user.Password))
+	if err := rows.Scan(&user.Id, &user.FirstName, &user.LastName, &user.DateCreated, &user.Email, &user.Password, &user.Status); err != nil {
+		logger.Error("error when trying to scan user", err)
+		return errors.NewInternalServerError(errors.DatabaseError)
+	}
+
+	return nil
 
 }

@@ -11,6 +11,7 @@ type UserServiceInterface interface {
 	UpdateUser(domain.User) (*domain.User, *errors.RestErr)
 	DeleteUser(int64) *errors.RestErr
 	FindUserByStatus(string) (domain.Users, *errors.RestErr)
+	LoginUser(request domain.LoginRequest) (*domain.User, *errors.RestErr)
 }
 
 var (
@@ -63,4 +64,12 @@ func (userService *userService) FindUserByStatus(status string) (domain.Users, *
 		return nil, err
 	}
 	return users, nil
+}
+
+func (userService *userService) LoginUser(request domain.LoginRequest) (*domain.User, *errors.RestErr) {
+	user := &domain.User{Email: request.Email, Password: request.Password}
+	if err := user.FindByEmailAndPassword(); err != nil {
+		return nil, err
+	}
+	return user, nil
 }
